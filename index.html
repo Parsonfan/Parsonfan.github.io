@@ -1,0 +1,611 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>2026 臺南雙人慶生漫遊｜晴雨雙軌行動行程表</title>
+<style>
+  :root {
+    --bg: #F8FAFC;
+    --card: #FFFFFF;
+    --text-main: #0F172A;
+    --text-sub: #475569;
+    --primary: #1A73E8;
+    --primary-light: #E8F0FE;
+    --accent: #F538A0;
+    --accent-light: #FCE8F3;
+    --rain: #00838F;
+    --rain-light: #E0F7FA;
+    --warn: #D93025;
+    --warn-light: #FCE8E6;
+    --border: #E2E8F0;
+    --success: #188038;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "PingFang TC", "Microsoft JhengHei", sans-serif;
+    background-color: var(--bg);
+    color: var(--text-main);
+    line-height: 1.5;
+    padding-bottom: 80px;
+  }
+  header {
+    background: linear-gradient(135deg, #174EA6 0%, #1A73E8 100%);
+    color: #FFFFFF;
+    padding: 20px 16px 16px;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.12);
+  }
+  .header-title { font-size: 1.2rem; font-weight: 700; margin-bottom: 4px; }
+  .header-sub { font-size: 0.82rem; opacity: 0.9; margin-bottom: 12px; }
+  .hub-bar {
+    background: rgba(255,255,255,0.15);
+    border-radius: 8px;
+    padding: 8px 12px;
+    font-size: 0.8rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .hub-bar a {
+    color: #FFFFFF;
+    background: rgba(255,255,255,0.25);
+    text-decoration: none;
+    padding: 4px 10px;
+    border-radius: 12px;
+    font-weight: 600;
+    font-size: 0.75rem;
+  }
+  .controls {
+    display: flex;
+    gap: 8px;
+    padding: 12px 16px;
+    background: var(--card);
+    border-bottom: 1px solid var(--border);
+    position: sticky;
+    top: 112px;
+    z-index: 90;
+  }
+  .day-tabs {
+    display: flex;
+    flex: 1;
+    background: #F1F5F9;
+    border-radius: 8px;
+    padding: 3px;
+  }
+  .tab-btn {
+    flex: 1;
+    border: none;
+    background: transparent;
+    padding: 8px 4px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--text-sub);
+    border-radius: 6px;
+    cursor: pointer;
+  }
+  .tab-btn.active {
+    background: var(--card);
+    color: var(--primary);
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+  }
+  .weather-toggle {
+    border: 1px solid var(--rain);
+    background: var(--rain-light);
+    color: var(--rain);
+    padding: 6px 10px;
+    border-radius: 8px;
+    font-size: 0.8rem;
+    font-weight: 700;
+    cursor: pointer;
+    white-space: nowrap;
+  }
+  .weather-toggle.rain-active {
+    background: var(--rain);
+    color: #FFFFFF;
+  }
+  .container { padding: 16px; max-width: 640px; margin: 0 auto; }
+  .day-section { display: none; }
+  .day-section.active { display: block; }
+  .route-box {
+    background: var(--primary-light);
+    border-left: 4px solid var(--primary);
+    border-radius: 8px;
+    padding: 12px;
+    margin-bottom: 16px;
+    font-size: 0.85rem;
+  }
+  .route-box-title { font-weight: 700; color: #174EA6; margin-bottom: 6px; font-size: 0.9rem; }
+  .alert-box {
+    background: var(--warn-light);
+    border-left: 4px solid var(--warn);
+    border-radius: 8px;
+    padding: 10px 12px;
+    margin-bottom: 16px;
+    font-size: 0.8rem;
+    color: #A50E0E;
+  }
+  .card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 14px;
+    margin-bottom: 14px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+    transition: opacity 0.2s;
+  }
+  .card.checked {
+    opacity: 0.6;
+    background: #F8FAFC;
+  }
+  .card.fixed-event {
+    border: 2px solid var(--accent);
+    background: #FFFBFD;
+  }
+  .card-header {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    margin-bottom: 8px;
+  }
+  .check-input {
+    width: 22px;
+    height: 22px;
+    margin-top: 2px;
+    accent-color: var(--success);
+    cursor: pointer;
+    flex-shrink: 0;
+  }
+  .card-meta { flex: 1; }
+  .time-badge {
+    display: inline-block;
+    font-size: 0.78rem;
+    font-weight: 700;
+    color: var(--primary);
+    background: var(--primary-light);
+    padding: 2px 8px;
+    border-radius: 4px;
+    margin-bottom: 4px;
+  }
+  .fixed-badge {
+    display: inline-block;
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: var(--accent);
+    background: var(--accent-light);
+    padding: 2px 8px;
+    border-radius: 4px;
+    margin-left: 6px;
+  }
+  .card-title { font-size: 1.02rem; font-weight: 700; color: var(--text-main); }
+  .card-desc { font-size: 0.86rem; color: var(--text-sub); margin: 8px 0; }
+  .rain-block {
+    background: var(--rain-light);
+    border-radius: 8px;
+    padding: 10px;
+    margin-top: 8px;
+    font-size: 0.84rem;
+    color: #004D40;
+    border: 1px dashed var(--rain);
+  }
+  .rain-only-highlight .rain-block {
+    background: #006064;
+    color: #FFFFFF;
+    border: none;
+  }
+  .rain-only-highlight .rain-block a {
+    background: #FFFFFF;
+    color: #006064;
+  }
+  .btn-group {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 10px;
+  }
+  .map-btn {
+    display: inline-flex;
+    align-items: center;
+    text-decoration: none;
+    font-size: 0.8rem;
+    font-weight: 600;
+    padding: 6px 12px;
+    border-radius: 6px;
+    background: var(--primary);
+    color: #FFFFFF;
+  }
+  .map-btn.secondary {
+    background: #E2E8F0;
+    color: var(--text-main);
+  }
+  .progress-footer {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: var(--card);
+    border-top: 1px solid var(--border);
+    padding: 10px 16px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 0.85rem;
+    z-index: 100;
+  }
+  .reset-btn {
+    border: 1px solid var(--border);
+    background: #F1F5F9;
+    color: var(--text-sub);
+    padding: 4px 10px;
+    border-radius: 6px;
+    font-size: 0.78rem;
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="header-title">2026 臺南雙人機車漫遊＆慶生行程表</div>
+  <div class="header-sub">10/24(六) 11:30取車 至 10/26(一) 16:30還車｜薔琵颱風應變版</div>
+  <div class="hub-bar">
+    <span>住宿基地：中西區赤嵌里觀亭街59號（駐點民宿）</span>
+    <a href="https://www.google.com/maps/search/?api=1&query=台南市中西區觀亭街59號" target="_blank">導航回民宿</a>
+  </div>
+</header>
+
+<div class="controls">
+  <div class="day-tabs">
+    <button class="tab-btn active" onclick="switchDay('day1', this)">10/24 (六)</button>
+    <button class="tab-btn" onclick="switchDay('day2', this)">10/25 (日)</button>
+    <button class="tab-btn" onclick="switchDay('day3', this)">10/26 (一)</button>
+  </div>
+  <button id="rainBtn" class="weather-toggle" onclick="toggleRainHighlight()">切換雨天高亮</button>
+</div>
+
+<div class="container" id="mainContainer">
+
+  <!-- DAY 1: 10/24 -->
+  <section id="day1" class="day-section active">
+    <div class="route-box">
+      <div class="route-box-title">10/24 (六) 機車路徑規劃（總里程約 19 km）</div>
+      <div>高鐵台南站 (11:30) 沿台39線北上，左轉市道182線（中山路接東門路）直行進城，過東門圓環接府前路一段，右轉忠義路二段至觀亭街59號駐點民宿放行李（約32分鐘）。下午於中西區半徑800公尺核心圈移動。</div>
+    </div>
+    <div class="alert-box">
+      <strong>科技執法提醒：</strong>高鐵站前北路禁臨停超3分鐘；避開歸仁圓環；中華東與凱旋路口機車務必兩段式左轉；大同路進東門圓環禁止紅燈右轉。
+    </div>
+
+    <article class="card" id="card-d1-1">
+      <div class="card-header">
+        <input type="checkbox" class="check-input" onchange="saveCheck('card-d1-1', this.checked)">
+        <div class="card-meta">
+          <span class="time-badge">11:30 - 12:15</span>
+          <div class="card-title">高鐵台南站取車 與 駐點民宿寄放行李</div>
+          <div class="card-desc">於高鐵站租車處領取機車，確認車廂備妥兩截式雨衣。騎乘進入中西區觀亭街59號「駐點民宿 Stay B&B」寄放行李，民宿距赤崁樓僅330公尺，位置極佳。</div>
+          <div class="btn-group">
+            <a class="map-btn" href="https://www.google.com/maps/search/?api=1&query=高鐵台南站" target="_blank">高鐵站地圖</a>
+            <a class="map-btn secondary" href="https://www.google.com/maps/search/?api=1&query=台南市中西區觀亭街59號" target="_blank">駐點民宿地圖</a>
+          </div>
+        </div>
+      </div>
+    </article>
+
+    <article class="card" id="card-d1-2">
+      <div class="card-header">
+        <input type="checkbox" class="check-input" onchange="saveCheck('card-d1-2', this.checked)">
+        <div class="card-meta">
+          <span class="time-badge">12:25 - 13:50</span>
+          <div class="card-title">第一碗牛肉湯：哞麻MUMA溫體牛肉湯</div>
+          <div class="card-desc">位於忠義路二段65號（林百貨旁，距民宿騎車3分鐘）。週末11:00營業至凌晨1點，結合韓風時尚裝潢與本土現切溫體牛，冷氣開放且座位舒適。</div>
+          <div class="rain-block">
+            <strong>雨天備案優勢：</strong>全室內時尚空間，免受外圍環流風雨影響；若想吃牛肉火鍋亦可直接開鍋。
+          </div>
+          <div class="btn-group">
+            <a class="map-btn" href="https://www.google.com/maps/search/?api=1&query=台南市中西區忠義路二段65號" target="_blank">哞麻MUMA地圖</a>
+          </div>
+        </div>
+      </div>
+    </article>
+
+    <article class="card" id="card-d1-3">
+      <div class="card-header">
+        <input type="checkbox" class="check-input" onchange="saveCheck('card-d1-3', this.checked)">
+        <div class="card-meta">
+          <span class="time-badge">14:15 - 16:00</span>
+          <div class="card-title">指定甜點：Autumn舒芙蕾熱·鬆餅</div>
+          <div class="card-desc">位於永福路二段117號（電話06-2236586）。日本職人技術蓬鬆舒芙蕾，推薦甜口「伯爵牛奶/綜合水果楓糖」配鹹口「雙倍起士火腿太陽蛋鬆餅」。店內座位約20席，建議先電話確認。</div>
+          <div class="rain-block">
+            <strong>雨天近距備案：霜花亭Brunch 公園店</strong><br>距觀亭街民宿步行僅2分鐘（公園路113號），林志玲婚禮指定紅磚洋樓老宅，必點北海道十勝乳霜舒芙蕾厚鬆餅配唐寧茶。
+          </div>
+          <div class="btn-group">
+            <a class="map-btn" href="https://www.google.com/maps/search/?api=1&query=台南市中西區永福路二段117號" target="_blank">Autumn舒芙蕾地圖</a>
+            <a class="map-btn secondary" href="https://www.google.com/maps/search/?api=1&query=台南市中西區公園路113號" target="_blank">霜花亭公園店地圖</a>
+          </div>
+        </div>
+      </div>
+    </article>
+
+    <article class="card" id="card-d1-4">
+      <div class="card-header">
+        <input type="checkbox" class="check-input" onchange="saveCheck('card-d1-4', this.checked)">
+        <div class="card-meta">
+          <span class="time-badge">16:15 - 18:45</span>
+          <div class="card-title">赤崁樓古蹟漫步 與 神農街燈籠老屋</div>
+          <div class="card-desc">晴天漫步赤崁樓與神農街、海安路藝術街，感受府城老街黃昏光影與文創小店魅力。</div>
+          <div class="rain-block">
+            <strong>雨天室內首選：臺南市美術館2館 ＋ 5樓南美春室 The POOL</strong><br>週六延長營業至21:00（週一休館，故週六必去）！機車直接停入忠義路二段1號地下停車場，欣賞坂茂建築與展覽後，上5樓純白玻璃屋「南美春室」喝下午茶看市景。
+          </div>
+          <div class="btn-group">
+            <a class="map-btn" href="https://www.google.com/maps/search/?api=1&query=台南神農街" target="_blank">神農街地圖</a>
+            <a class="map-btn secondary" href="https://www.google.com/maps/search/?api=1&query=台南市中西區忠義路二段1號" target="_blank">南美館2館地圖</a>
+          </div>
+        </div>
+      </div>
+    </article>
+
+    <article class="card" id="card-d1-5">
+      <div class="card-header">
+        <input type="checkbox" class="check-input" onchange="saveCheck('card-d1-5', this.checked)">
+        <div class="card-meta">
+          <span class="time-badge">19:00 - 21:00</span>
+          <div class="card-title">林百貨摩登夜景 與 晚間美食巡禮</div>
+          <div class="card-desc">位於忠義路二段63號（營業至21:00）。搭指針式電梯上6樓頂樓神社看末廣町夜景、選購文創伴手禮。晚餐可於保安路或國華街覓食。</div>
+          <div class="rain-block">
+            <strong>雨天無縫備案：</strong>林百貨全棟室內好逛，晚餐直接於隔壁「哞麻MUMA」享用熱騰騰溫體牛肉火鍋，或旁側中正路31號「兜空間 Dou Maison」。
+          </div>
+          <div class="btn-group">
+            <a class="map-btn" href="https://www.google.com/maps/search/?api=1&query=台南市中西區忠義路二段63號" target="_blank">林百貨地圖</a>
+          </div>
+        </div>
+      </div>
+    </article>
+  </section>
+
+  <!-- DAY 2: 10/25 -->
+  <section id="day2" class="day-section">
+    <div class="route-box">
+      <div class="route-box-title">10/25 (日) 機車路徑規劃（市區精緻環線約 6 km）</div>
+      <div>早上自觀亭街北上公園南路吃西羅殿牛肉湯（3分鐘），回民宿換裝後南下和意路1號晶英酒店慶生（5分鐘）。14:35騎往洪老師算命館，17:00返回民族路二段413號美格瑪半熟起司專賣店（距民宿僅350公尺）。</div>
+    </div>
+    <div class="alert-box">
+      <strong>胃容量與公休提醒：</strong>西羅殿週一、二休息，故安排於週日早晨兩人共喝一碗小碗牛肉湯，務必保留胃容量給12:00晶英軒極品烤鴨大餐！
+    </div>
+
+    <article class="card" id="card-d2-1">
+      <div class="card-header">
+        <input type="checkbox" class="check-input" onchange="saveCheck('card-d2-1', this.checked)">
+        <div class="card-meta">
+          <span class="time-badge">08:30 - 09:40</span>
+          <div class="card-title">米其林必比登：西羅殿牛肉湯</div>
+          <div class="card-desc">位於北區公園南路98號（營業04:30-13:00）。兩人合點一碗小碗牛肉湯（NT$120）或麻油牛肉湯（NT$150），附贈入口即化肥肉燥飯，記得加獨門辣醬！吃完回民宿梳洗準備慶生。</div>
+          <div class="rain-block">
+            <strong>雨天備案：</strong>距民宿僅900公尺，若清晨下雨可快速外帶一碗回民宿房間熱熱喝，並致電成功路200號「葡吉麵包」預訂羅宋麵包。
+          </div>
+          <div class="btn-group">
+            <a class="map-btn" href="https://www.google.com/maps/search/?api=1&query=台南市北區公園南路98號" target="_blank">西羅殿牛肉湯地圖</a>
+            <a class="map-btn secondary" href="https://www.google.com/maps/search/?api=1&query=台南市北區成功路200號" target="_blank">葡吉麵包地圖</a>
+          </div>
+        </div>
+      </div>
+    </article>
+
+    <article class="card fixed-event" id="card-d2-2">
+      <div class="card-header">
+        <input type="checkbox" class="check-input" onchange="saveCheck('card-d2-2', this.checked)">
+        <div class="card-meta">
+          <span class="time-badge">12:00 - 14:30</span><span class="fixed-badge">既定慶生行程</span>
+          <div class="card-title">台南晶英酒店 2F「晶英軒」慶生午宴</div>
+          <div class="card-desc">位於中西區和意路1號2F（電話06-390-3020）。主打極品烤鴨宴（片皮櫻桃鴨桌邊服務）與精緻粵台料理。用餐可折抵地下B5-B7嘟嘟房停車費。</div>
+          <div class="rain-block">
+            <strong>雨天動線：</strong>全室內五星級飯店，可直接駛入地下停車場再搭電梯上2樓，完美避開風雨。
+          </div>
+          <div class="btn-group">
+            <a class="map-btn" href="https://maps.app.goo.gl/f7kVnkvErLRT7DHd7?g_st=ic" target="_blank">晶英軒指定地圖</a>
+          </div>
+        </div>
+      </div>
+    </article>
+
+    <article class="card fixed-event" id="card-d2-3">
+      <div class="card-header">
+        <input type="checkbox" class="check-input" onchange="saveCheck('card-d2-3', this.checked)">
+        <div class="card-meta">
+          <span class="time-badge">15:00 - 17:00</span><span class="fixed-badge">既定算命行程</span>
+          <div class="card-title">洪老師算命（預留 2 小時）</div>
+          <div class="card-desc">依預約門牌前往洪老師命理館（注意：勿誤導航至安平路51巷之同名文理補習班）。2小時深度解析八字、紫微斗數與流年運勢。</div>
+          <div class="rain-block">
+            <strong>雨天動線：</strong>15:00-17:00全程於室內算命，剛好避開午後對流雨高峰；若地點在安平，結束後可順遊安平「Oh Mo貓吃」舒芙蕾。
+          </div>
+          <div class="btn-group">
+            <a class="map-btn" href="https://www.google.com/maps/search/?api=1&query=台南市安平區永華八街208號" target="_blank">Oh Mo貓吃舒芙蕾地圖</a>
+          </div>
+        </div>
+      </div>
+    </article>
+
+    <article class="card" id="card-d2-4">
+      <div class="card-header">
+        <input type="checkbox" class="check-input" onchange="saveCheck('card-d2-4', this.checked)">
+        <div class="card-meta">
+          <span class="time-badge">17:15 - 18:30</span>
+          <div class="card-title">指定甜點：美格瑪半熟起司專賣（新址）</div>
+          <div class="card-desc">已搬遷至中西區民族路二段413號（11:00-18:30/19:00，距民宿步行僅4分鐘）。復古老屋內設有超美「立體玫瑰花園」打卡區，必吃爆漿流心半熟起司塔與Q彈布丁燒！</div>
+          <div class="rain-block">
+            <strong>雨天優勢：</strong>設有室內玫瑰花園拍照區並奉上檸檬水，買完步行4分鐘即回觀亭街民宿休息。
+          </div>
+          <div class="btn-group">
+            <a class="map-btn" href="https://www.google.com/maps/search/?api=1&query=台南市中西區民族路二段413號" target="_blank">美格瑪新址地圖</a>
+          </div>
+        </div>
+      </div>
+    </article>
+
+    <article class="card" id="card-d2-5">
+      <div class="card-header">
+        <input type="checkbox" class="check-input" onchange="saveCheck('card-d2-5', this.checked)">
+        <div class="card-meta">
+          <span class="time-badge">19:00 - 21:30</span>
+          <div class="card-title">成真咖啡正興店 或 KUMOKIRI外帶舒芙蕾</div>
+          <div class="card-desc">中午晶英軒大餐後，晚間適合漫步海安路二段78號「成真咖啡」（純白三層樓建築，營業至21:00），或至西門路一段703巷13號外帶現煎「KUMOKIRI香草香緹舒芙蕾（NT$90）」。</div>
+          <div class="rain-block">
+            <strong>雨天餐酒館備案：jinher今鶴義式餐酒館</strong><br>位於永華路一段320號（營業至21:00），寬敞室內享用義式料理與超人氣「流沙鹹蛋黃冰淇淋舒芙蕾」。
+          </div>
+          <div class="btn-group">
+            <a class="map-btn" href="https://www.google.com/maps/search/?api=1&query=台南市中西區海安路二段78號" target="_blank">成真咖啡地圖</a>
+            <a class="map-btn secondary" href="https://www.google.com/maps/search/?api=1&query=台南市中西區西門路一段703巷13號" target="_blank">KUMOKIRI地圖</a>
+            <a class="map-btn secondary" href="https://www.google.com/maps/search/?api=1&query=台南市中西區永華路一段320號" target="_blank">jinher今鶴地圖</a>
+          </div>
+        </div>
+      </div>
+    </article>
+  </section>
+
+  <!-- DAY 3: 10/26 -->
+  <section id="day3" class="day-section">
+    <div class="route-box">
+      <div class="route-box-title">10/26 (一) 機車路徑規劃（順向南下歸仁高鐵約 17 km）</div>
+      <div>上午於觀亭街與赤崁樓周邊採買伴手禮，11:30退房後沿忠義路接府前路，過東門圓環轉大同路（台1線）直線南下至仁德區文華路二段66號「奇美博物館」（22分鐘，週一正常開館！）。15:45沿文賢路接歸仁大道騎往高鐵台南站（15分鐘），16:30準時還車買便當。</div>
+    </div>
+    <div class="alert-box">
+      <strong>週一休館避險：</strong>週一南美館1、2館與西羅殿牛肉湯皆休息，但「奇美博物館」週一正常開館（週三才休），且正好位於回高鐵站的順向半路上！
+    </div>
+
+    <article class="card" id="card-d3-1">
+      <div class="card-header">
+        <input type="checkbox" class="check-input" onchange="saveCheck('card-d3-1', this.checked)">
+        <div class="card-meta">
+          <span class="time-badge">09:30 - 11:20</span>
+          <div class="card-title">赤崁樓周邊百年伴手禮採買 與 退房</div>
+          <div class="card-desc">先至北區崇安街54號「連得堂餅家」買限量手工煎餅（每人限2包），再回赤崁樓對面買「進福大灣花生糖」（民族路二段327號）、「大師兄手工蛋捲」（赤崁街）、「韓金婆婆豆腐酪」（赤崁街1號），11:00可於「美格瑪」取外帶盒。</div>
+          <div class="rain-block">
+            <strong>雨天精簡採買：</strong>若下雨僅於民宿走路4分鐘內買進福花生糖與美格瑪，其餘伴手禮於16:30高鐵站內專櫃（深緣及水鳳梨酥、狸小路千層、櫻波布丁）一站買齊。
+          </div>
+          <div class="btn-group">
+            <a class="map-btn" href="https://www.google.com/maps/search/?api=1&query=台南市北區崇安街54號" target="_blank">連得堂餅家地圖</a>
+            <a class="map-btn secondary" href="https://www.google.com/maps/search/?api=1&query=台南市中西區民族路二段327號" target="_blank">進福花生糖地圖</a>
+            <a class="map-btn secondary" href="https://www.google.com/maps/search/?api=1&query=台南市中西區赤崁街1號" target="_blank">韓金婆婆地圖</a>
+          </div>
+        </div>
+      </div>
+    </article>
+
+    <article class="card" id="card-d3-2">
+      <div class="card-header">
+        <input type="checkbox" class="check-input" onchange="saveCheck('card-d3-2', this.checked)">
+        <div class="card-meta">
+          <span class="time-badge">12:00 - 15:45</span>
+          <div class="card-title">奇美博物館：歐式莊園與《埃及之王：法老》特展</div>
+          <div class="card-desc">位於仁德區文華路二段66號（週一09:30-17:30開館）。戶外歐式園區免費拍照；館內常設展全票NT$200，更推薦2026大英博物館鉅獻《埃及之王：法老》特展（NT$580）或VR體驗《消失的法老》（NT$680含常設展）。</div>
+          <div class="rain-block">
+            <strong>雨天最強皇宮備案：</strong>館內展廳極為宏偉且附設星巴克與義式餐廳，可完全隔絕外圍環流風雨長達4小時！
+          </div>
+          <div class="btn-group">
+            <a class="map-btn" href="https://www.google.com/maps/search/?api=1&query=台南市仁德區文華路二段66號" target="_blank">奇美博物館地圖</a>
+          </div>
+        </div>
+      </div>
+    </article>
+
+    <article class="card" id="card-d3-3">
+      <div class="card-header">
+        <input type="checkbox" class="check-input" onchange="saveCheck('card-d3-3', this.checked)">
+        <div class="card-meta">
+          <span class="time-badge">15:45 - 16:30</span>
+          <div class="card-title">順向騎返高鐵台南站（加油與準時還車）</div>
+          <div class="card-desc">自奇美博物館沿文賢路接歸仁大道騎乘僅需15分鐘（約7.5公里）。於高鐵站周邊加滿油後，16:30準時完成還車手續（注意高鐵站前北路違規臨停科技執法）。</div>
+          <div class="btn-group">
+            <a class="map-btn" href="https://www.google.com/maps/search/?api=1&query=高鐵台南站" target="_blank">高鐵台南站地圖</a>
+          </div>
+        </div>
+      </div>
+    </article>
+
+    <article class="card fixed-event" id="card-d3-4">
+      <div class="card-header">
+        <input type="checkbox" class="check-input" onchange="saveCheck('card-d3-4', this.checked)">
+        <div class="card-meta">
+          <span class="time-badge">16:30 - 17:30</span><span class="fixed-badge">高鐵便當攻略</span>
+          <div class="card-title">高鐵台南站晚餐便當 與 伴手禮最後採買</div>
+          <div class="card-desc">
+            1. <strong>台鐵便當（2F往沙崙站通道旁）</strong>：16:10-18:00開賣，16:30還車上2樓可立即買！<br>
+            2. <strong>高鐵便當（2F專櫃）</strong>：17:00-19:00開賣（香滷肉排、香烤雞腿排、素鵝鮮蔬 NT$100），建議16:50排隊。<br>
+            3. <strong>全聯高鐵快閃店（1F大廳）</strong>：17:00-20:00開賣N700ST限定束帶便當（醬香燒肉$99、照燒雞腿排$109、糖醋雞丁丼$129）。<br>
+            4. <strong>站內伴手禮</strong>：1F深緣及水關廟鳳梨酥、興波咖啡、狸小路千層、櫻波布丁。
+          </div>
+          <div class="btn-group">
+            <a class="map-btn" href="https://www.google.com/maps/search/?api=1&query=深緣及水台南高鐵店" target="_blank">深緣及水高鐵店地圖</a>
+          </div>
+        </div>
+      </div>
+    </article>
+  </section>
+
+</div>
+
+<div class="progress-footer">
+  <span id="progressText">已完成 0 / 14 項行程</span>
+  <button class="reset-btn" onclick="resetChecks()">重置勾選</button>
+</div>
+
+<script>
+  function switchDay(dayId, btn) {
+    document.querySelectorAll('.day-section').forEach(el => el.classList.remove('active'));
+    document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+    document.getElementById(dayId).classList.add('active');
+    btn.classList.add('active');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  function toggleRainHighlight() {
+    const container = document.getElementById('mainContainer');
+    const btn = document.getElementById('rainBtn');
+    container.classList.toggle('rain-only-highlight');
+    btn.classList.toggle('rain-active');
+    btn.textContent = btn.classList.contains('rain-active') ? '雨天高亮中' : '切換雨天高亮';
+  }
+
+  function saveCheck(cardId, isChecked) {
+    const card = document.getElementById(cardId);
+    if (isChecked) {
+      card.classList.add('checked');
+      localStorage.setItem('tn2026_' + cardId, '1');
+    } else {
+      card.classList.remove('checked');
+      localStorage.removeItem('tn2026_' + cardId);
+    }
+    updateProgress();
+  }
+
+  function loadChecks() {
+    document.querySelectorAll('.card').forEach(card => {
+      const saved = localStorage.getItem('tn2026_' + card.id);
+      const input = card.querySelector('.check-input');
+      if (saved === '1' && input) {
+        input.checked = true;
+        card.classList.add('checked');
+      }
+    });
+    updateProgress();
+  }
+
+  function resetChecks() {
+    document.querySelectorAll('.card').forEach(card => {
+      localStorage.removeItem('tn2026_' + card.id);
+      const input = card.querySelector('.check-input');
+      if (input) input.checked = false;
+      card.classList.remove('checked');
+    });
+    updateProgress();
+  }
+
+  function updateProgress() {
+    const total = document.querySelectorAll('.check-input').length;
+    const checked = document.querySelectorAll('.check-input:checked').length;
+    document.getElementById('progressText').textContent = '已完成 ' + checked + ' / ' + total + ' 項行程';
+  }
+
+  window.addEventListener('DOMContentLoaded', loadChecks);
+</script>
+</body>
+</html>
